@@ -7,4 +7,5 @@ router.register(r'matriculas', MatriculaViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('api/', include('matriculas.urls')),
 ]
