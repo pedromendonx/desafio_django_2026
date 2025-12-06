@@ -1,21 +1,136 @@
-<h1>Dashboard Financeiro</h1>
-<p>Total de alunos: {{ total_alunos }}</p>
-<p>Cursos ativos: {{ cursos_ativos }}</p>
-<p>Matrículas pagas: {{ matriculas_pagas }}</p>
-<p>Matrículas pendentes: {{ matriculas_pendentes }}</p>
+{% extends 'base.html' %}
 
-<h2>Resumo por aluno</h2>
-<table border="1">
-  <tr>
-    <th>Aluno</th>
-    <th>Total Pago</th>
-    <th>Total Devido</th>
-  </tr>
-  {% for f in alunos_financeiro %}
-  <tr>
-    <td>{{ f.aluno }}</td>
-    <td>{{ f.total_pago }}</td>
-    <td>{{ f.total_devido }}</td>
-  </tr>
-  {% endfor %}
-</table>
+{% block title %}Relatório SQL{% endblock %}
+{% block page_title %}Relatório com SQL Bruto{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-database"></i> Total Pago por Aluno (SQL Bruto)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Este relatório usa <strong>SQL bruto</strong> com:
+                    <code>JOIN</code>, <code>SUM</code>, <code>COUNT</code>, <code>GROUP BY</code>
+                </div>
+                
+                <div class="mb-3">
+                    <a href="/api/sql/total-pago/" class="btn btn-primary" target="_blank">
+                        <i class="bi bi-code-slash"></i> Ver JSON da API
+                    </a>
+                    <a href="/api/sql/matriculas-por-curso/" class="btn btn-secondary" target="_blank">
+                        <i class="bi bi-journal-text"></i> Matrículas por Curso (JSON)
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="sqlTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Aluno</th>
+                                <th>E-mail</th>
+                                <th>Total Matrículas</th>
+                                <th>Pagas</th>
+                                <th>Pendentes</th>
+                                <th>Total Pago (R$)</th>
+                                <th>Total Devido (R$)</th>
+                                <th>Valor Total (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sqlData">
+            
+                            <tr>
+                                <td colspan="8" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                    Carregando dados...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">Consulta SQL Executada</h6>
+                    </div>
+                    <div class="card-body">
+                        <pre class="bg-light p-3"><code>
+SELECT 
+    a.id as aluno_id,
+    a.nome as aluno_nome,
+    a.email,
+    a.cpf,
+    COUNT(m.id) as total_matriculas,
+    SUM(CASE WHEN m.status_pagamento = 'P' THEN 1 ELSE 0 END) as matriculas_pagas,
+    SUM(CASE WHEN m.status_pagamento = 'E' THEN 1 ELSE 0 END) as matriculas_pendentes,
+    SUM(CASE WHEN m.status_pagamento = 'P' THEN c.valor_inscricao ELSE 0 END) as total_pago,
+    SUM(CASE WHEN m.status_pagamento = 'E' THEN c.valor_inscricao ELSE 0 END) as total_devido,
+    SUM(c.valor_inscricao) as valor_total
+FROM alunos_aluno a
+LEFT JOIN matriculas_matricula m ON a.id = m.aluno_id
+LEFT JOIN cursos_curso c ON m.curso_id = c.id
+GROUP BY a.id, a.nome, a.email, a.cpf
+ORDER BY a.nome
+                        </code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/sql/total-pago/')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('sqlData');
+                tbody.innerHTML = '';
+                
+                if (data.status === 'success') {
+                    data.data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><strong>${item.aluno_nome}</strong></td>
+                            <td>${item.email}</td>
+                            <td><span class="badge bg-primary">${item.total_matriculas}</span></td>
+                            <td><span class="badge bg-success">${item.matriculas_pagas}</span></td>
+                            <td><span class="badge bg-warning">${item.matriculas_pendentes}</span></td>
+                            <td class="text-success"><strong>R$ ${item.total_pago.toFixed(2)}</strong></td>
+                            <td class="text-danger"><strong>R$ ${item.total_devido.toFixed(2)}</strong></td>
+                            <td class="text-primary"><strong>R$ ${item.valor_total.toFixed(2)}</strong></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-danger">
+                                Erro ao carregar dados: ${data.message}
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                const tbody = document.getElementById('sqlData');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-danger">
+                            Erro na requisição: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            });
+    });
+</script>
+{% endblock %}
+{% endblock %}

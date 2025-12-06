@@ -3,8 +3,8 @@ from .models import Curso
 
 @admin.register(Curso)
 class CursoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'carga_horaria', 'valor_inscricao', 'status')
-    search_fields = ('nome',)
+    list_display = ('name', 'carga_horaria', 'valor_inscricao', 'status')
+    search_fields = ('name',)
     list_filter = ('status',)
-    ordering = ('nome',)
+    ordering = ('name',)
 

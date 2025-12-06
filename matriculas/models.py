@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 
-class matriculas(models.Model):
+class Matricula(models.Model):
 
     aluno = models.ForeignKey('alunos.Aluno', on_delete=models.CASCADE)
     curso = models.ForeignKey('cursos.Curso', on_delete=models.CASCADE)
