@@ -1,0 +1,21 @@
+<h1>Dashboard Financeiro</h1>
+<p>Total de alunos: {{ total_alunos }}</p>
+<p>Cursos ativos: {{ cursos_ativos }}</p>
+<p>Matrículas pagas: {{ matriculas_pagas }}</p>
+<p>Matrículas pendentes: {{ matriculas_pendentes }}</p>
+
+<h2>Resumo por aluno</h2>
+<table border="1">
+  <tr>
+    <th>Aluno</th>
+    <th>Total Pago</th>
+    <th>Total Devido</th>
+  </tr>
+  {% for f in alunos_financeiro %}
+  <tr>
+    <td>{{ f.aluno }}</td>
+    <td>{{ f.total_pago }}</td>
+    <td>{{ f.total_devido }}</td>
+  </tr>
+  {% endfor %}
+</table>
