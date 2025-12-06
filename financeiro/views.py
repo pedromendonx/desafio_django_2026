@@ -2,6 +2,7 @@ from django.db import connection
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import render
 import json
 
 class TotalPagoSQLView(APIView):
@@ -13,11 +14,12 @@ class TotalPagoSQLView(APIView):
     def get(self, request):
         try:
             with connection.cursor() as cursor:
-        
+    
+
                 cursor.execute("""
                     SELECT 
                         a.id as aluno_id,
-                        a.nome as aluno_nome,
+                        a.name as aluno_nome,  -- CORRIGIDO: de a.nome para a.name
                         a.email,
                         a.cpf,
                         COUNT(m.id) as total_matriculas,
@@ -29,8 +31,8 @@ class TotalPagoSQLView(APIView):
                     FROM alunos_aluno a
                     LEFT JOIN matriculas_matricula m ON a.id = m.aluno_id
                     LEFT JOIN cursos_curso c ON m.curso_id = c.id
-                    GROUP BY a.id, a.nome, a.email, a.cpf
-                    ORDER BY a.nome
+                    GROUP BY a.id, a.name, a.email, a.cpf 
+                    ORDER BY a.name 
                 """)
                 
                 columns = [col[0] for col in cursor.description]
@@ -72,7 +74,7 @@ class RelatorioMatriculasPorCursoSQL(APIView):
                 cursor.execute("""
                     SELECT 
                         c.id as curso_id,
-                        c.nome as curso_nome,
+                        c.name as curso_nome,
                         c.carga_horaria,
                         c.valor_inscricao,
                         c.status,
@@ -83,7 +85,7 @@ class RelatorioMatriculasPorCursoSQL(APIView):
                         SUM(CASE WHEN m.status_pagamento = 'E' THEN c.valor_inscricao ELSE 0 END) as receita_pendente
                     FROM cursos_curso c
                     LEFT JOIN matriculas_matricula m ON c.id = m.curso_id
-                    GROUP BY c.id, c.nome, c.carga_horaria, c.valor_inscricao, c.status
+                    GROUP BY c.id, c.name, c.carga_horaria, c.valor_inscricao, c.status
                     ORDER BY total_matriculas DESC
                 """)
                 
@@ -109,3 +111,7 @@ class RelatorioMatriculasPorCursoSQL(APIView):
                 'status': 'error',
                 'message': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+def relatorio_page(request):
+    """Renderiza a página HTML do relatório"""
+    return render(request, 'dashboard.html')

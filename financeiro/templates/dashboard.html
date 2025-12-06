@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Relatório SQL{% endblock %}
-{% block page_title %}Relatório com SQL Bruto{% endblock %}
+{% block page_title %}Relatório{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -9,15 +9,10 @@
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
-                    <i class="bi bi-database"></i> Total Pago por Aluno (SQL Bruto)
+                    <i class="bi bi-database"></i> Total Pago por Aluno
                 </h5>
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Este relatório usa <strong>SQL bruto</strong> com:
-                    <code>JOIN</code>, <code>SUM</code>, <code>COUNT</code>, <code>GROUP BY</code>
-                </div>
                 
                 <div class="mb-3">
                     <a href="/api/sql/total-pago/" class="btn btn-primary" target="_blank">
